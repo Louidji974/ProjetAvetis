@@ -37,6 +37,7 @@ const AddressesPage = (props) => {
     });
     setAddresses([newAddress, ...addresses]);
     resetForm();
+    Router.push("/");
   };
   const toggleAddress = (address) => async () => {
     const { data: updatedAddress } = await axios.patch(`../../api/addresses/${address._id}`, {
@@ -61,30 +62,37 @@ const AddressesPage = (props) => {
     <div>
       <h1>test</h1>
       <Formik
-        initialValues={{ numero: "", rue: "", ville: "", lieu_dit: "", pays: "", type_lieu: "" }}
+        initialValues={{
+          numero: "",
+          rue: "",
+          ville: "",
+          lieu_dit: "",
+          pays: "",
+          type_lieu: "",
+        }}
         onSubmit={submit}
-        validationSchema={validationSchema} // Ajout de la prop validationSchema
+        validationSchema={validationSchema}
       >
-        {({ errors, touched }) => (
+        {({ errors, touched, values }) => (
           <Form className="m-auto w-1/2 p-10 mt-12 shadow-md">
-            <h2 className="m-auto text-center p-5">Ajouter une addresse</h2>
+            <h2 className="m-auto text-center p-5">Ajouter une adresse</h2>
             <div className=" flex flex-wrap grid-cols-2 gap-3 ">
-              <Field type="number" id="numero" name="numero" className="border p-2" placeholder="Numero" />
+              <Field type="number" id="numero" name="numero" className="border p-2" placeholder="Numéro" />
               <Field type="text" id="rue" name="rue" className="border p-2" placeholder="Rue" />
               <Field type="text" id="ville" name="ville" className="border p-2" placeholder="Ville" />
               <Field type="text" id="lieu_dit" name="lieu_dit" className="border p-2" placeholder="Lieu dit" />
               <Field type="text" id="pays" name="pays" className="border p-2" placeholder="Pays" />
-              <Field as="select" id="type_lieu" name="type_lieu" className="border p-2 w-48" placeholder="Type lieu">
-                <option value="maison">Maison</option>
-                <option value="appartement">Appartement</option>
-                <option value="autre">Autre</option>
+              <Field as="select" id="type_lieu" name="type_lieu" className="border p-2 w-48" placeholder="Type de lieu">
+                <option value="">Choisir une option</option>
+                <option value="Restaurant">Restaurant</option>
+                <option value="Musee">Musée</option>
+                <option value="Bar">Bar</option>
+                <option value="Parc">Parc</option>
               </Field>
             </div>
-            {Object.values(errors).some((error) => error) && (
-              <div className="text-red-500 mb-4">Tous les champs sont obligatoires</div>
-            )}
-            <button type="submit" className="border m-auto p-2 bg-green-600 text-white rounded-lg text-center">
-              Nouvelle Adresse
+
+            <button type="submit" className="bg-blue-900 text-white p-2 rounded-md mt-4">
+              Ajouter
             </button>
           </Form>
         )}

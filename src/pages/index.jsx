@@ -1,62 +1,83 @@
 import Image from "next/image";
 import Link from "next/link";
 import axios from "axios";
+import { useState } from "react";
+import Filters from "../components/Filters";
+import Router from "next/router";
 
 export const getServerSideProps = async () => {
   const { data: addresses } = await axios("http://localhost:3002/api/addresses");
 
+  const uniqueLocationTypes = [...new Set(addresses.map((address) => address.type_lieu))];
+
   return {
     props: {
       addresses,
+      uniqueLocationTypes,
     },
   };
 };
 
-const toggleAddress = (address) => async () => {
-  const { data: updatedAddress } = await axios.patch(`../../api/addresses/${address._id}`, {
-    numero: address.numero,
-    rue: address.rue,
-    ville: address.ville,
-    lieu_dit: address.lieu_dit,
-    pays: address.pays,
-    type_lieu: address.type_lieu,
-  });
-
-  // Vous pouvez ajouter ici la logique pour mettre à jour le state avec l'adresse mise à jour
+const deleteAddress = async (addressId) => {
+  try {
+    await axios.delete(`../../api/addresses/${addressId}`);
+    Router.reload();
+  } catch (error) {
+    console.error("Erreur lors de la suppression de l'adresse :", error);
+  }
 };
 
-export default function Home({ addresses }) {
+export default function Home({ addresses, uniqueLocationTypes }) {
+  const [filteredAddresses, setFilteredAddresses] = useState(addresses);
+
+  const handleLocationTypeFilterChange = (selectedLocationType) => {
+    if (selectedLocationType === "") {
+      setFilteredAddresses(addresses);
+    } else {
+      const filteredAddresses = addresses.filter((address) => address.type_lieu === selectedLocationType);
+      setFilteredAddresses(filteredAddresses);
+    }
+  };
+
   return (
-    <>
-      <h2 className="text-center mt-10 font-bold text-blue-900 text-3xl">POWERADDRESS MANAGER</h2>
-      <div className="shadow-md m-auto w-5/6 flex p-5 mt-10">
-        <div className="w-1/4">
-          {/* Filtres */}
-          <h2 className="font-bold">Filtres</h2>
-        </div>
+    <div className="bg-blue-100 min-h-screen text-white">
+      <h2 className="text-center mt-10 font-bold text-2xl">POWERADDRESS MANAGER</h2>
+      <div className="shadow-md m-auto w-5/6 flex p-5 mt-10 bg-white text-black rounded-lg">
+        <Filters
+          uniqueLocationTypes={uniqueLocationTypes}
+          handleLocationTypeFilterChange={handleLocationTypeFilterChange}
+        />
         <div className="w-3/4">
           <h2 className="font-bold">Adresses</h2>
           <div className="p-2">
-            <div className="grid grid-cols-7 grid-flow-row p-2 text-center m-2">
+            <div className="grid grid-cols-8 grid-flow-row p-2 text-center m-2">
               <p className="font-bold">Numéro</p>
               <p className="font-bold">Rue</p>
               <p className="font-bold">Ville</p>
               <p className="font-bold">Lieu dit</p>
               <p className="font-bold">Pays</p>
               <p className="font-bold">Type de lieu</p>
+              <p className="font-bold">Editer</p>
+              <p className="font-bold">Supprimer</p>
             </div>
-            {addresses && addresses.length > 0 ? (
-              addresses.map((address) => (
-                <div key={address._id} className="grid grid-cols-7 grid-flow-row text-center border border-100-black p-2 m-2 items-center">
+            {filteredAddresses && filteredAddresses.length > 0 ? (
+              filteredAddresses.map((address) => (
+                <div key={address._id} className="grid grid-cols-8 grid-flow-row text-center border border-gray-300 p-2 m-2 items-center">
                   <p>{address.numero}</p>
                   <p>{address.rue}</p>
                   <p>{address.ville}</p>
                   <p>{address.lieu_dit}</p>
                   <p>{address.pays}</p>
                   <p>{address.type_lieu}</p>
-                  <Link href={`/`} className="border bg-red-500 border-radius-sm text-white font-bold w-2/3 p-2 rounded-lg m-auto">
-                    Edit
+                  <Link href={`addresses/${address._id}`} className="text-sm border bg-blue-800 text-white font-bold p-1 rounded-lg mr-2">
+                    Détails
                   </Link>
+                  <button
+                    onClick={() => deleteAddress(address._id)}
+                    className="text-sm border bg-blue-800 text-white font-bold p-1 rounded-lg"
+                  >
+                    Supprimer
+                  </button>
                 </div>
               ))
             ) : (
@@ -65,6 +86,6 @@ export default function Home({ addresses }) {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
